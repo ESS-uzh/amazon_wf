@@ -1,4 +1,5 @@
 from database import connect
+import pdb
 
 class Tile:
 
@@ -24,10 +25,10 @@ class Tile:
     def save_to_db(self):
         with connect() as connection:
             with connection.cursor() as cursor:
-                cursor.execute('''INSERT INTO tiles (name, acquisition_date, level, 
-                cloud_coverage, size_mb, uuid, available, tile_loc, filename, 
+                cursor.execute('''INSERT INTO tiles (name, acquisition_date, level,
+                cloud_coverage, size_mb, uuid, available, tile_loc, filename,
                 footprint, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);''',
                 (self.name, self.date,  self.level, self.cc, self.size_mb, self.uuid, 
                     self.available, self.tile_loc, self.fname, self.geometryi, self.status))
 
@@ -35,7 +36,7 @@ class Tile:
         with connect() as connection:
             with connection.cursor() as cursor:
                 cursor.execute('''UPDATE tiles set acquisition_date=%s, level=%s, 
-                cloud_coverage=%s, size_mb=%s, uuid=%s, filename=%s, footprint=%s WHERE name=%s''',
+                cloud_coverage=%s, size_mb=%s, uuid=%s, filename=%s, footprint=%s WHERE name=%s;''',
                 (self.date,  self.level, self.cc, self.size_mb, self.uuid, self.fname,
                     self.geometry, self.name))
 
@@ -44,26 +45,44 @@ class Tile:
         with connect() as connection:
             with connection.cursor() as cursor:
                 cursor.execute('''UPDATE tiles set tile_loc=%s
-                WHERE name=%s''', (loc, self.name))
+                WHERE name=%s;''', (loc, self.name))
 
 
     def update_tile_availability(self, available):
         with connect() as connection:
             with connection.cursor() as cursor:
                 cursor.execute('''UPDATE tiles set available=%s
-                WHERE name=%s''', (available, self.name))
+                WHERE name=%s;''', (available, self.name))
 
     def update_tile_status(self, status):
         with connect() as connection:
             with connection.cursor() as cursor:
                 cursor.execute('''UPDATE tiles set status=%s
-                WHERE name=%s''', (status, self.name))
+                WHERE name=%s;''', (status, self.name))
 
     @classmethod
     def load_by_tile_name(cls, name):
         with connect() as connection:
             with connection.cursor() as cursor:
                 cursor.execute('SELECT * FROM tiles where name=%s', (name,))
+                tile_data = cursor.fetchone()
+                return cls(name=tile_data[1],
+                           acquisition_date=tile_data[2],
+                           level=tile_data[3],
+                           cloud_coverage=tile_data[4],
+                           size_mb=tile_data[5],
+                           uuid=tile_data[6],
+                           available=tile_data[7],
+                           tile_loc=tile_data[8],
+                           filename=tile_data[9],
+                           footprint=tile_data[10],
+                           status=tile_data[11])
+
+    @classmethod
+    def load_by_tile_id(cls, _id):
+        with connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT * FROM tiles where id=%s', (_id,))
                 tile_data = cursor.fetchone()
                 return cls(name=tile_data[1],
                            acquisition_date=tile_data[2],
@@ -107,13 +126,35 @@ class Tile:
 
 
     @staticmethod
-    def get_tiles_with_no_uuid():
+    def get_tiles_incomplete(tile_loc):
         """
-        Return a list of all the tile names with empty uuid field
+        Return a list of all the tile's id (for the same batch )
+        with an empty status
         """
         with connect() as connection:
             with connection.cursor() as cursor:
-                cursor.execute('select name from tiles where uuid is NULL')
+                cursor.execute('''SELECT id from tiles WHERE
+                                  tile_loc=%s AND
+                                  status is NULL''', (tile_loc,))
+                return [item[0] for item in cursor.fetchall()]
+
+    @staticmethod
+    def get_tiles_with_status(tile_loc, status):
+        """
+        Return a list of all the tile's id (for the same batch)
+        with a status
+
+        status:
+         - ready
+         - corrupted
+
+        """
+        with connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('''SELECT id from tiles WHERE
+                                 tile_loc=%s AND
+                                 status=%s;
+                               ''', (tile_loc, status))
                 return [item[0] for item in cursor.fetchall()]
 
 
@@ -131,4 +172,18 @@ class Tile:
                                  available=False AND
                                  status is NULL;
                                ''', (tile_loc,))
+                return [item[0] for item in cursor.fetchall()]
+
+
+    @staticmethod
+    def get_tiles_fname_from_id(tiles_id):
+        """
+        Return a list of all the tile's fname from a list of ids
+
+        """
+        with connect() as connection:
+            with connection.cursor() as cursor:
+                sql = '''SELECT filename from tiles WHERE
+                                 id = ANY(%(param_arr)s);'''
+                cursor.execute(sql, {'param_arr': tiles_id})
                 return [item[0] for item in cursor.fetchall()]
