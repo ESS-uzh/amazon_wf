@@ -72,3 +72,17 @@ def get_dirs(indir, tiles_fname):
         raise ex
 
     return to_process
+
+
+#   - create the R file from template
+def gen_R_script(template_path, mapping, fname_out):
+    with open(template_path, 'r') as f:
+        templstr = f.read()
+        templ = Template(templstr)
+        Rscript = templ.render(mapping)
+        dir_path = os.path.dirname(template_path)
+        fpath_out = os.path.join(dir_path, fname_out)
+    with open(fpath_out, "w") as fh:
+        fh.write(Rscript)
+    return fpath_out
+
