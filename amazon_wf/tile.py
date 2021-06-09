@@ -139,7 +139,7 @@ class Tile:
                 return [item[0] for item in cursor.fetchall()]
 
     @staticmethod
-    def get_tiles_with_status(tile_loc, status):
+    def get_tiles_id_with_status(tile_loc, status):
         """
         Return a list of all the tile's id (for the same batch)
         with a status

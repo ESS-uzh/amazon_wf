@@ -21,11 +21,11 @@ class Biodivmap:
                 (self.tile_id, self.raster_loc,  self.proc_status))
 
     @classmethod
-    def load_by_tile_id(cls, tile_id):
+    def load_by_proc_id(cls, proc_id):
         with connect() as connection:
             with connection.cursor() as cursor:
-                cursor.execute('SELECT * FROM tiles where tile_id=%s;', (tile_id,))
-                biodvimap_data = cursor.fetchone()
+                cursor.execute('SELECT * FROM biodivmap where proc_id=%s;', (proc_id,))
+                biodivmap_data = cursor.fetchone()
                 return cls(tile_id=biodivmap_data[1],
                            raster_loc=biodivmap_data[2],
                            out_loc=biodivmap_data[3],
@@ -44,9 +44,9 @@ class Biodivmap:
                 return [item[0] for item in cursor.fetchall()]
 
     @staticmethod
-    def get_proc_id_with_proc_status(tiles_id, proc_status):
+    def get_procs_and_tiles_id_with_proc_status(tiles_id, proc_status):
         """
-        Return a list of all the proc id (for the same batch)
+        Return a list of all the (proc_id, tile_id) for the same batch
         with a status
 
         status:
@@ -60,11 +60,11 @@ class Biodivmap:
         """
         with connect() as connection:
             with connection.cursor() as cursor:
-                cursor.execute('''SELECT proc_id from biodivmap WHERE
-                                 tile_loc = ANY(%(param_arr)s) AND
+                cursor.execute('''SELECT proc_id, tile_id from biodivmap WHERE
+                                 tile_id in %s AND
                                  proc_status=%s;
-                               ''', (tiles_id, status))
-                return [item[0] for item in cursor.fetchall()]
+                               ''', (tuple(tiles_id), proc_status))
+                return [item for item in cursor.fetchall()]
 
 
     @staticmethod

@@ -13,6 +13,7 @@ from sentinelsat import SentinelAPI
 
 from amazon_wf.actions import download_for_batch
 from amazon_wf.actions import stack_for_batch
+from amazon_wf.actions import biodivmap_pca_for_batch
 
 import pdb
 
@@ -50,5 +51,4 @@ if __name__ == "__main__":
     BATCH = 1
 
     logger.info(f'Starting workflow for batch: {BATCH}')
-    download()
-    stack()
+    biodivmap_pca_for_batch(BATCH, BASEDIR)
