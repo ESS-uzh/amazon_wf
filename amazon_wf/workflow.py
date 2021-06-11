@@ -44,11 +44,19 @@ def stack():
     logger.info('Starting pre-processing procedure..')
     stack_for_batch(BATCH, BASEDIR)
 
+
+def pca():
+    logger.info('Starting PCA procedure..')
+    biodivmap_pca_for_batch(BATCH, BASEDIR)
+
 if __name__ == "__main__":
 
 
-    BASEDIR = '/home/diego/files/shared/group'
-    BATCH = 1
+    BASEDIR = '/home/ubuntu/mnt/shared/group'
+    BATCH = 2
 
     logger.info(f'Starting workflow for batch: {BATCH}')
-    biodivmap_pca_for_batch(BATCH, BASEDIR)
+    download()
+    stack()
+    pca()
+
