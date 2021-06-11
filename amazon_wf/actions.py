@@ -165,22 +165,26 @@ def biodivmap_pca_for_batch(tile_loc, basedir,
         template_pca = os.path.join(os.path.dirname(outdir), 'amazon_template_pca.R')
 
         for proc_id, tile_id in procs_and_tiles_id_raster:
+            logger.info(f'PCA processing for tile: {tile_id}')
             mapping = {}
             biodivmap_db = Biodivmap.load_by_proc_id(proc_id)
+            if not biodivmap_db.out_loc:
+                biodivmap_db.update_out_loc(loc)
+                logger.info(f'Update out_loc location to {loc}')
             tile_db = Tile.load_by_tile_id(tile_id)
             fname_raster = '_'.join([tile_db.name, tile_db.date.strftime('%Y%m%d')])+'.tif'
-            pdb.set_trace()
             fname_rscript = fname_raster.replace('.tif', '.R')
             mapping['path_to_raster'] = os.path.join(indir, fname_raster)
             mapping['path_to_out'] = outdir
             rscript_path = gen_R_script(template_pca, mapping, fname_rscript)
-            result = subprocess.run(["Rscript", rscript_path])
+            logger.info(f'Generated R script for tile: {tile_id}')
+            try:
+                result = subprocess.check_output(["Rscript", rscript_path])
+            except subprocess.CalledProcessError as e:
+                logger.error(e.output)
+                os.remove(rscript_path)
+                biodivmap_db.update_proc_status('error pca')
+                continue
             # delete the rscript_path
-            # update biodivmap db
-            # done
-            print('')
-
-
-
-
-
+            os.remove(rscript_path)
+            biodivmap_db.update_proc_status('pca')
