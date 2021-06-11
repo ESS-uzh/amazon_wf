@@ -20,6 +20,19 @@ class Biodivmap:
                 VALUES (%s, %s, %s);''',
                 (self.tile_id, self.raster_loc,  self.proc_status))
 
+    def update_proc_status(self, proc_status):
+        with connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('''UPDATE biodivmap SET proc_status=%s 
+                where tile_id=%s;''',(proc_status, self.tile_id))
+
+    def update_out_loc(self, loc):
+        with connect() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('''UPDATE biodivmap SET out_loc=%s 
+                where tile_id=%s;''',(loc, self.tile_id))
+
+
     @classmethod
     def load_by_proc_id(cls, proc_id):
         with connect() as connection:
