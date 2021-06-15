@@ -2,6 +2,7 @@ import os
 import pathlib
 import time
 import logging
+import json
 import zipfile
 import sentinelsat
 from sentinelsat import SentinelAPI
@@ -14,11 +15,10 @@ from sentinelsat import SentinelAPI
 from amazon_wf.actions import download_for_batch
 from amazon_wf.actions import stack_for_batch
 from amazon_wf.actions import biodivmap_pca_for_batch
+from amazon_wf.database import Database
 
 import pdb
 
-
-from amazon_wf.tile import Tile
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,11 @@ def pca():
 
 if __name__ == "__main__":
 
+    with open('../../db_amazon_credentials.json', "r") as read_file:
+        db = json.load(read_file)
+    
+    Database.initialise(user=db['user'], password=db['pwd'], 
+                        database=db['database'], host=db['host'])
 
     BASEDIR = '/home/ubuntu/mnt/shared/group'
     BATCH = 2

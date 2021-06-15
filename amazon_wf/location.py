@@ -1,4 +1,6 @@
-from database import connect
+from amazon_wf.database import CursorFromConnectionPool
+import pdb
+
 
 class Location:
 
@@ -9,41 +11,37 @@ class Location:
         return f"{self.dirpath}"
 
     def save_to_db(self):
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute('''INSERT INTO locations(dirpath)
-                VALUES (%s);''', (self.dirpath,))
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''INSERT INTO locations(dirpath)
+            VALUES (%s);''', (self.dirpath,))
 
     @classmethod
     def load_by_loc(cls, loc):
         """
         Return a location instance
         """
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute('''SELECT dirpath FROM locations WHERE loc=%s;''',
-                        (loc,))
-                location = cursor.fetchone()
-                return cls(dirpath=location[0])
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT dirpath FROM locations WHERE loc=%s;''',
+                    (loc,))
+            location = cursor.fetchone()
+            return cls(dirpath=location[0])
 
     @staticmethod
     def get_loc_from_dirpath(dirpath):
         """
         Return a loc corresponding to dirpath
         """
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute('''SELECT loc FROM locations where dirpath=%s;''',
-                        (dirpath,))
-                return cursor.fetchone()
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT loc FROM locations where dirpath=%s;''',
+                    (dirpath,))
+            return cursor.fetchone()
 
     @staticmethod
     def get_dirpath_from_loc(loc):
         """
         Return dirpath corresponding to a loc
         """
-        with connect() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute('''SELECT dirpath FROM locations where loc=%s;''',
-                        (loc,))
-                return cursor.fetchone()[0]
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT dirpath FROM locations where loc=%s;''',
+                    (loc,))
+            return cursor.fetchone()[0]

@@ -24,6 +24,7 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+
 def download_for_batch(api, tile_loc, basedir):
     """
     Download tiles of batch tile_loc and update database
@@ -188,3 +189,5 @@ def biodivmap_pca_for_batch(tile_loc, basedir,
             # delete the rscript_path
             os.remove(rscript_path)
             biodivmap_db.update_proc_status('pca')
+    logger.info(f'No tiles found to be used for pca for batch: {tile_loc}')
+    return 0
