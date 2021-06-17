@@ -22,7 +22,7 @@ Database.initialise(user=db['user'], password=db['pwd'],
 
 def display_results(batch):
     with CursorFromConnectionPool() as cursor:
-        cursor.execute('''select id, name, level, acquisition_date, size_mb, status, available, proc_status from tiles FULL JOIN biodivmap ON tiles.id = biodivmap.tile_id where tiles.tile_loc=%s;''', (batch,))
+        cursor.execute('''SELECT id, name, level, acquisition_date, size_mb, status, available, proc_status FROM tiles FULL JOIN biodivmap ON tiles.id = biodivmap.tile_id WHERE tiles.tile_loc=%s;''', (batch,))
         data = cursor.fetchall()
         return data
 
