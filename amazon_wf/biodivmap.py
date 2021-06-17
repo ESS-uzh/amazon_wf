@@ -59,10 +59,10 @@ class Biodivmap:
         status:
          - raster
          - pca
-         - done
-         - error raster
-         - error pca
-         - error out
+         - error_pca
+         - pca_ready
+         - out
+         - error_out
 
         """
         with CursorFromConnectionPool() as cursor:

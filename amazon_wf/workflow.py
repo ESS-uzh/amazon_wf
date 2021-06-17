@@ -22,23 +22,24 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
-def download():
-    for i in range(3):
+def download(trials=3):
+    for i in range(1, trials+1):
         logger.info('Starting download procedure..')
         logger.info(f'Run: {i}')
         # connect to the API
         # A .netrc file with username and password must be present in the home folder
         api = SentinelAPI(None, None, 'https://scihub.copernicus.eu/dhus')
         download_status = download_for_batch(api, BATCH, basedir=BASEDIR)
-        if download_status == 1:
+        if download_status == 1 and i < (trials+1):
             time.sleep(120)
             continue
-        elif download_status == 2:
+        elif download_status == 2 and i < (trials+1):
             logger.info('Workflow halted')
             time.sleep(180)
             continue
         elif download_status == 0:
             break
+    logger.info(f'Download exited with status: {download_status}')
 
 def stack():
     logger.info('Starting pre-processing procedure..')
@@ -58,10 +59,10 @@ if __name__ == "__main__":
                         database=db['database'], host=db['host'])
 
     BASEDIR = '/home/ubuntu/mnt/shared/group'
-    BATCH = 2
+    BATCH = 3
 
     logger.info(f'Starting workflow for batch: {BATCH}')
     download()
-    stack()
-    pca()
+    #stack()
+    #pca()
 
