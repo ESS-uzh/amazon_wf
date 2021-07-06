@@ -1,47 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
- <title></title>
-</head>
-<body>
-	<h1> Amazon BioDiv Database </h1>
+{% extends "layout.html" %}
+{% block content %}
 
-	<h5> {{ batch }} </h5>
+<section>
+<h2> Batch: {{ batch }}</h2>
+<h2> Locations: </h2>
+<ul>
+<li> Tiles:  {{ dirpath }} </li>
+</ul>
+</section>
 
-	<h6> Locations </h6>
-
-	<ul>
-		<li> Tiles: </li> {{ tiles_loc }}
-		<li> Stacks: </li> {{ raster_loc }}
-		<li> Biodiversity: </li> {{ raster_loc }}
-
-        </ul>
-
-<style>
- 
- td {
-        width: 150px;
-        text-align: center;
-        border: 1px solid black;
-        padding: 5px;
-      }
-</style>
-<table>
+<section>
+<h2> Data: </h2>
+ <table>
   <thead>
     <tr>
-        <th></th>
-        <th>current timestamp</th>
-        <th>expiry timestamp</th>
+        <th> Name </th>
+        <th> Level </th>
+        <th> Date </th>
+        <th> Size </th>
+        <th> Status </th>
+        <th> Proc_level </th>
+        <th> User </th>
     </tr>
-    </thead>    
+    </thead>
     <tbody>
-     {% for row in data %}    
+     {% for row in data %}
             <tr>
-                <td>{{row[0]}}</td>
                 <td>{{row[1]}}</td>
                 <td>{{row[2]}}</td>
+                <td>{{row[3]}}</td>
+                <td>{{row[4]}}</td>
+                <td>{{row[5]}}</td>
+                <td>{{row[7]}}</td>
+                <td>{{row[8]}}</td>
             </tr>
         {% endfor %}
     </tbody>
-</table></body>
-</html>
+  </table>
+</section>
+{% endblock  content %}

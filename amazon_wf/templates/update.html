@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<section>
+    <h2> User: {{ user_name }}</h2>
+</section>
+
+<section>
+    <h2> To update: </h2>
+    <form action="/update" method="POST">
+        <div class="select__tiles">
+        <select name="tile" place multiple>
+        <option value="" disabled selected>Choose one or more tiles</option>
+        {% for row in data %}    
+        <option value="{{row[1]}}">{{row[1]}}</option>
+        {% endfor %}
+        </select>
+        </div>
+        <button class="discard__btn" type="submit" name="action" value="discard">discard</button>
+        <button class="update__btn" type="submit" name="action" value="update">update</button>
+    </form>
+</section>
+
+{% endblock  content %}

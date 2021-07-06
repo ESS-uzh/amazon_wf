@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+<section>
+    <h2> Batch: {{ batch }}</h2>
+    <h2> Locations: </h2>
+    <ul>
+        <li> Tiles:  {{ dirpath }} </li>
+    </ul>
+</section>
+
+<section>
+    <h2> Availables: </h2>
+    <form action="/availables" method="POST">
+        <div class="select__tiles">
+        <select name="tile" place multiple>
+        <option value="" disabled selected>Choose one or more tiles</option>
+        {% for row in data %}    
+        <option value="{{row[1]}}">{{row[1]}}</option>
+        {% endfor %}
+        </select>
+        </div>
+        <div class="select__user">
+        <select name="user" place>
+        <option value="" disabled selected>Select a User</option>
+        {% for each in users %}
+        <option value="{{each}}">{{each}}</option>
+        {% endfor %}
+        </select>
+        </div>
+        <button class="availables__btn" type="submit">submit</button>
+    </form>
+</section>
+
+{% endblock  content %}

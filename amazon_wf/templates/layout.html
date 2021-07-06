@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content=width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="../static/style.css" />
+      <title>AmazonDB</title>
+  </head>
+
+  <body>
+  <header class="navbar">
+    <h1> Amazon Biodiversity DB </h1>
+    <div class="dropdown">
+      <button class="dropbtn">Update
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+          {% for usr in users %}
+          <a href="{{ url_for('update', user=usr) }}">{{ usr }}</a>
+          {% endfor %}
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="dropbtn">Availables
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+          {% for item in batches %}
+          <a href="{{ url_for('availables', batch=item) }}">batch {{ item }}</a>
+          {% endfor %}
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="dropbtn">Results
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+          {% for item in batches %}
+          <a href="{{ url_for('results', batch=item) }}">batch {{ item }}</a>
+          {% endfor %}
+       </div>
+    </div>
+   </header>
+      <main class="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="{{ category }}" >
+            {{ message }}
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+      </div>
+
+      </main>
+      </main>
+  </body>
+
+</html>

@@ -4,7 +4,7 @@ class Tile:
 
     def __init__(self, name, acquisition_date=None, filename=None, footprint=None,
             level=None, cloud_coverage=None, size_mb=None, uuid=None, available=False,
-            tile_loc=None, status=None):
+            tile_loc=None, status=None, user_id=None):
         self.name = name
         self.date = acquisition_date
         self.level = level
@@ -16,19 +16,29 @@ class Tile:
         self.fname = filename
         self.geometry = footprint
         self.status = status
+        self.user_id = user_id
 
     def __repr__(self):
         return f"{self.name}"
 
+    def get_tile_id(self):
+        """
+        Return the tile id
+        """
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT id FROM tiles
+                              WHERE name=%s;''', (self.name,))
+            return cursor.fetchone()
 
     def save_to_db(self):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''INSERT INTO tiles (name, acquisition_date, level,
             cloud_coverage, size_mb, uuid, available, tile_loc, filename,
-            footprint, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);''',
+            footprint, status, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);''',
             (self.name, self.date,  self.level, self.cc, self.size_mb, self.uuid, 
-                self.available, self.tile_loc, self.fname, self.geometryi, self.status))
+                self.available, self.tile_loc, self.fname, self.geometry, 
+                self.status, self.user_id))
 
     def update_tile(self):
         with CursorFromConnectionPool() as cursor:
@@ -54,6 +64,16 @@ class Tile:
             cursor.execute('''UPDATE tiles set status=%s
             WHERE name=%s;''', (status, self.name))
 
+    def update_tile_user_id(self, user_id):
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''UPDATE tiles set user_id=%s
+            WHERE name=%s;''', (user_id, self.name))
+
+    def update_tile_user_id_as_null(self):
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''UPDATE tiles set user_id=NULL
+            WHERE name=%s;''', (self.name,))
+
     @classmethod
     def load_by_tile_name(cls, name):
         with CursorFromConnectionPool() as cursor:
@@ -69,7 +89,8 @@ class Tile:
                        tile_loc=tile_data[8],
                        filename=tile_data[9],
                        footprint=tile_data[10],
-                       status=tile_data[11])
+                       status=tile_data[11],
+                       user_id=tile_data[12])
 
     @classmethod
     def load_by_tile_id(cls, _id):
@@ -86,7 +107,8 @@ class Tile:
                        tile_loc=tile_data[8],
                        filename=tile_data[9],
                        footprint=tile_data[10],
-                       status=tile_data[11])
+                       status=tile_data[11],
+                       user_id=tile_data[12])
 
     @classmethod
     def load_by_tile_uuid(cls, uuid):
@@ -103,7 +125,10 @@ class Tile:
                        tile_loc=tile_data[8],
                        filename=tile_data[9],
                        footprint=tile_data[10],
-                       status=tile_data[11])
+                       status=tile_data[11],
+                       user_id=tile_data[12])
+
+
 
     @staticmethod
     def get_tiles():
