@@ -24,6 +24,67 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+def size_in_mb(strg_size):
+    """
+    Helper
+    """
+    num, dim = strg_size.split()
+    if dim == 'GB':
+        return round(float(num)*1000, 1)
+    return round(float(num), 1)
+
+
+def uuid_with_larger_size(products):
+    """
+    Helper
+    """
+    lowest_size = 0.0
+    uuid = None
+    for k in products.keys():
+        if size_in_mb(products.get(k)['size']) > lowest_size:
+            lowest_size = size_in_mb(products.get(k)['size'])
+            uuid = products.get(k)['uuid']
+    return uuid
+
+
+def update_db_for_batch(api, tile_loc, level='2A', date=('20200620', '20200820')):
+    logger.info(f'Populate db for batch: {tile_loc}')
+    logger.info(f'Level selected: {level}')
+    logger.info(f'Date selected: {date}')
+    # select tiles with status and uuid == NULL
+    ids = Tile.get_tiles_no_uuid(tile_loc)
+    if ids:
+        logger.info(f'Found: {len(ids)} tiles incomplete')
+        for _id in ids:
+            time.sleep(2)
+            tile_db = Tile.load_by_tile_id(_id)
+            logger.info(f'Trying: {tile_db.name}')
+            products = api.query(filename=f'*_{tile_db.name}_*',
+                     date=date,
+                     platformname='Sentinel-2',
+                     processingLevel=f'Level-{level}',
+                     cloudcoverpercentage=(0, 0.4))
+
+            if len(products) == 0:
+                logger.info(f'No match found for: {tile_db.name}')
+                continue
+
+            uuid = uuid_with_larger_size(products)
+
+            begin_acquisition_date = products.get(uuid)['beginposition'].date()
+            tile_db.date = begin_acquisition_date.strftime('%Y-%m-%d')
+            tile_db.level = products.get(uuid)['processinglevel'].split('-')[1]
+            tile_db.cc = round(products.get(uuid)['cloudcoverpercentage'], 4)
+            tile_db.size_mb = size_in_mb(products.get(uuid)['size'])
+            tile_db.uuid = products.get(uuid)['uuid']
+            tile_db.geometry = products.get(tile_db.uuid)['footprint']
+            tile_db.fname = products.get(tile_db.uuid)['filename']
+            tile_db.update_tile()
+            logger.info(f'Tile: {tile_db.name} updated')
+    else:
+        logger.info(f'No incomplete tiles found for batch: {tile_loc}')
+    return 0
+
 
 def download_for_batch(api, tile_loc, basedir):
     """
@@ -68,7 +129,8 @@ def download_for_batch(api, tile_loc, basedir):
             tile_db.update_tile_status('ready')
             logger.info(f'update {tile_db.name} as available and ready')
         return 1
-    logger.info(f'No tiles found to be downloaded for batch: {tile_loc}')
+    else:
+        logger.info(f'No tiles found to be downloaded for batch: {tile_loc}')
     return 0
 
 
