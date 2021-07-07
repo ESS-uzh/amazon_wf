@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 
 from sentinelsat import SentinelAPI
 
+from amazon_wf.actions import update_db_for_batch
 from amazon_wf.actions import download_for_batch
 from amazon_wf.actions import stack_for_batch
 from amazon_wf.actions import biodivmap_pca_for_batch
@@ -21,6 +22,14 @@ import pdb
 
 
 logger = logging.getLogger(__name__)
+
+def update_db(**kwargs):
+    # connect to the API
+    # A .netrc file with username and password must be present in the home folder
+    api = SentinelAPI(None, None, 'https://scihub.copernicus.eu/dhus')
+    logger.info('Starting update db procedure..')
+    update_db_for_batch(api, **kwargs)
+
 
 def download(trials=3):
     for i in range(1, trials+1):
@@ -59,10 +68,11 @@ if __name__ == "__main__":
                         database=db['database'], host=db['host'])
 
     BASEDIR = '/home/ubuntu/mnt/shared/group'
-    BATCH = 3
+    BATCH = 2
 
     logger.info(f'Starting workflow for batch: {BATCH}')
-    download()
+    update_db(tile_loc=BATCH, level='1C')#, date=('20200220', '20201020'))
+    #download()
     #stack()
     #pca()
 
