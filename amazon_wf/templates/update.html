@@ -6,10 +6,10 @@
 
 <section>
     <h2> To update: </h2>
-    <form action="/update" method="POST">
+    <form action="{{ url_for('update', user_name=user_name) }}" method="POST">
         <div class="select__tiles">
-        <select name="tile" place multiple>
-        <option value="" disabled selected>Choose one or more tiles</option>
+        <select name="tile" place>
+        <option value="" disabled selected>Choose a tile</option>
         {% for row in data %}    
         <option value="{{row[1]}}">{{row[1]}}</option>
         {% endfor %}

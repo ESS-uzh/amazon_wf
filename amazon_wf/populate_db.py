@@ -24,49 +24,6 @@ def get_tiles_from_file(fpath):
         content_list = fp.readlines()
     return [line.rstrip("\n") for line in content_list]
 
-def size_in_mb(strg_size):
-    num, dim = strg_size.split()
-    if dim == 'GB':
-        return round(float(num)*1000, 1)
-    return round(float(num), 1)
-
-
-def uuid_with_larger_size(products):
-    lowest_size = 0.0
-    uuid = None
-    for k in products.keys():
-        if size_in_mb(products.get(k)['size']) > lowest_size:
-            lowest_size = size_in_mb(products.get(k)['size'])
-            uuid = products.get(k)['uuid']
-    return uuid
-
-def populate_db_2alevel(tiles, api):
-    for tile in tiles:
-        time.sleep(2)
-        print(f'Tile: {tile}\n')
-        tile_db = Tile(tile)
-        products = api.query(filename=f'*_{tile}_*',
-                 date=('20200620', '20200820'),
-                 platformname='Sentinel-2',
-                 processingLevel='Level-2A',
-                 cloudcoverpercentage=(0, 0.4))
-
-        if len(products) == 0:
-            tile_db.save_to_db()
-            print(f'No match found\n')
-            continue
-
-        uuid = uuid_with_larger_size(products)
-
-        begin_acquisition_date = products.get(uuid)['beginposition'].date()
-        tile_db.date = begin_acquisition_date.strftime('%Y-%m-%d')
-        tile_db.level = products.get(uuid)['processinglevel'].split('-')[1]
-        tile_db.cc = round(products.get(uuid)['cloudcoverpercentage'], 4)
-        tile_db.size_mb = size_in_mb(products.get(uuid)['size'])
-        tile_db.uuid = products.get(uuid)['uuid']
-        tile_db.geometry = products.get(tile_db.uuid)['footprint']
-        tile_db.fname = products.get(tile_db.uuid)['filename']
-        tile_db.save_to_db()
 
 def create_batches():
     tiles_db = Tile.get_tiles()

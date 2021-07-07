@@ -141,7 +141,7 @@ class Tile:
 
 
     @staticmethod
-    def get_tiles_incomplete(tile_loc):
+    def get_tiles_no_uuid(tile_loc):
         """
         Return a list of all the tile's id (for the same batch )
         with an empty status
@@ -149,6 +149,7 @@ class Tile:
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''SELECT id from tiles WHERE
                               tile_loc=%s AND
+                              uuid is NULL AND
                               status is NULL''', (tile_loc,))
             return [item[0] for item in cursor.fetchall()]
 

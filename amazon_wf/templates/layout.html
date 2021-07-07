@@ -11,12 +11,12 @@
   <header class="navbar">
     <h1> Amazon Biodiversity DB </h1>
     <div class="dropdown">
-      <button class="dropbtn">Update
+      <button class="dropbtn">Users
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-content">
           {% for usr in users %}
-          <a href="{{ url_for('update', user=usr) }}">{{ usr }}</a>
+          <a href="{{ url_for('update', user_name=usr) }}">{{ usr }}</a>
           {% endfor %}
       </div>
     </div>

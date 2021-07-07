@@ -172,12 +172,12 @@ caption {
 
 .danger {
   border-color: darkred;
-  background-color: red;
+  background-color: #ff4d4d;
   color: white;
 }
 
 .success {
   border-color: orange;
-  background-color: green;
+  background-color: #33cc33;
   color: black;
 }*/
