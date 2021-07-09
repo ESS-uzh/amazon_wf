@@ -187,6 +187,20 @@ class Tile:
                            ''', (tile_loc,))
             return [item[0] for item in cursor.fetchall()]
 
+    @staticmethod
+    def get_downloadable_with_status(tile_loc, status):
+        """
+        Return a list of all the tile's uuid with equal tile_loc (same batch) field
+        that are downloadable
+        """
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT uuid from tiles WHERE
+                             tile_loc=%s AND
+                             uuid is NOT NULL AND
+                             available=False AND
+                             status=%s;
+                           ''', (tile_loc, status))
+            return [item[0] for item in cursor.fetchall()]
 
     @staticmethod
     def get_tiles_fname_from_id(tiles_id):
