@@ -71,13 +71,11 @@ def display_update(user_id):
         return data
 
 
-@app.route('/results', methods=['GET', 'POST'])
-def results():
-    batch = request.args.get('batch')
-    if not batch:
-        batch = 1
+@app.route('/results/<batch>', methods=['GET'])
+def results(batch):
     dirpath = Location.get_dirpath_from_loc(batch)
     data = display_results(batch)
+    print(batch)
     return render_template('result.html',
                            batch=batch,
                            data=data,
@@ -86,32 +84,30 @@ def results():
                            users=USERS)
 
 
-@app.route('/availables', methods=['GET', 'POST'])
-def availables():
-    batch = request.args.get('batch')
-    print(batch)
-    if not batch:
-        batch = 1
+@app.route('/availables/<batch>', methods=['GET', 'POST'])
+def availables(batch):
     dirpath = Location.get_dirpath_from_loc(batch)
     data = display_availables(batch, proc_status='pca')
+    print(batch)
     if request.method == 'POST':
-        batch = request.args.get('batch')
         print(batch)
         user_name = request.form.get('user')
+        print(user_name)
         tiles_name = request.form.getlist('tile')
+        print(tiles_name)
         if user_name and tiles_name:
             user_db = User.load_by_name(user_name)
             for tile_name in tiles_name:
                 tile_db = Tile.load_by_tile_name(tile_name)
                 if tile_db.user_id:
                     flash('Tiles already taken! Please try again.', 'danger')
-                    return redirect(url_for('availables'))
+                    return url_for('availables', batch=batch)
                 else:
                     tile_db.update_tile_user_id(user_db._id)
             flash('Tiles selected for batch {}'.format(batch), 'success')
+            return redirect(url_for('results', batch=batch))
         else:
             flash('Please select user and tile/s!', 'danger')
-            return redirect(url_for('availables'))
 
     return render_template('available.html',
                         batch=batch,
@@ -121,30 +117,27 @@ def availables():
                         users=USERS)
 
 
-@app.route('/update', methods=['GET', 'POST'])
-def update():
-    user_name = request.args.get('user')
-    if not user_name:
-        # to be changed
-        user_name = 'VillamainaD'
+@app.route('/update/<user_name>', methods=['GET', 'POST'])
+def update(user_name):
     user = User.load_by_name(user_name)
     if request.method == 'POST':
-        tiles_name = request.form.getlist('tile')
-        if not tiles_name:
-            flash('Please select tile/s!', 'danger')
-            return redirect(url_for('update'))
+        tile_name = request.form.get('tile')
+        if not tile_name:
+            flash('Please select a tile!', 'danger')
+            return redirect(url_for('update', user_name=user_name))
+        tile_db = Tile.load_by_tile_name(tile_name)
+        batch=tile_db.tile_loc
         if request.form.get('action') == 'update':
-            for tile_name in tiles_name:
-                tile_db = Tile(tile_name)
-                tile_id = tile_db.get_tile_id()
-                bio_db = Biodivmap(tile_id)
-                bio_db.update_proc_status('pca_ready')
-            flash('Tile/s proc_level updated!', 'success')
+            tile_id = tile_db.get_tile_id()
+            bio_db = Biodivmap(tile_id)
+            bio_db.update_proc_status('pca_ready')
+            flash('Tile {} proc_level updated!'.format(tile_name), 'success')
         elif request.form.get('action') == 'discard':
-            for tile_name in tiles_name:
-                tile_db = Tile(tile_name)
-                tile_db.update_tile_user_id_as_null()
-            flash('Tile/s discarded!', 'success')
+            print('discard')
+            print(batch)
+            tile_db.update_tile_user_id_as_null()
+            flash('Tile: {} discarded!'.format(tile_name), 'success')
+        return redirect(url_for('results', batch=batch))
     data = display_update(user._id)
     return render_template('update.html',
                            user_name=user_name,

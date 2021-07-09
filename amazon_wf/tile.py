@@ -141,7 +141,7 @@ class Tile:
 
 
     @staticmethod
-    def get_tiles_incomplete(tile_loc):
+    def get_tiles_no_uuid(tile_loc):
         """
         Return a list of all the tile's id (for the same batch )
         with an empty status
@@ -149,6 +149,7 @@ class Tile:
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''SELECT id from tiles WHERE
                               tile_loc=%s AND
+                              uuid is NULL AND
                               status is NULL''', (tile_loc,))
             return [item[0] for item in cursor.fetchall()]
 
@@ -186,6 +187,20 @@ class Tile:
                            ''', (tile_loc,))
             return [item[0] for item in cursor.fetchall()]
 
+    @staticmethod
+    def get_downloadable_with_status(tile_loc, status):
+        """
+        Return a list of all the tile's uuid with equal tile_loc (same batch) field
+        that are downloadable
+        """
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''SELECT uuid from tiles WHERE
+                             tile_loc=%s AND
+                             uuid is NOT NULL AND
+                             available=False AND
+                             status=%s;
+                           ''', (tile_loc, status))
+            return [item[0] for item in cursor.fetchall()]
 
     @staticmethod
     def get_tiles_fname_from_id(tiles_id):

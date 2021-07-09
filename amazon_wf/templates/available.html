@@ -10,7 +10,7 @@
 
 <section>
     <h2> Availables: </h2>
-    <form action="/availables" method="POST">
+    <form action="{{ url_for('availables',  batch=batch) }}" method="POST">
         <div class="select__tiles">
         <select name="tile" place multiple>
         <option value="" disabled selected>Choose one or more tiles</option>

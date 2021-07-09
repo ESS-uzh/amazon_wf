@@ -1,5 +1,6 @@
 import os
 import pathlib
+import fnmatch
 import time
 import logging
 import zipfile
@@ -24,12 +25,77 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+def size_in_mb(strg_size):
+    """
+    Helper
+    """
+    num, dim = strg_size.split()
+    if dim == 'GB':
+        return round(float(num)*1000, 1)
+    return round(float(num), 1)
 
-def download_for_batch(api, tile_loc, basedir):
+
+def uuid_with_larger_size(products):
+    """
+    Helper
+    """
+    lowest_size = 0.0
+    uuid = None
+    for k in products.keys():
+        if size_in_mb(products.get(k)['size']) > lowest_size:
+            lowest_size = size_in_mb(products.get(k)['size'])
+            uuid = products.get(k)['uuid']
+    return uuid
+
+
+def update_db_for_batch(api, tile_loc, level='2A', date=('20200620', '20200820')):
+    logger.info(f'Populate db for batch: {tile_loc}')
+    logger.info(f'Level selected: {level}')
+    logger.info(f'Date selected: {date}')
+    # select tiles with status and uuid == NULL
+    ids = Tile.get_tiles_no_uuid(tile_loc)
+    if ids:
+        logger.info(f'Found: {len(ids)} tiles incomplete')
+        for _id in ids:
+            time.sleep(2)
+            tile_db = Tile.load_by_tile_id(_id)
+            logger.info(f'Trying: {tile_db.name}')
+            products = api.query(filename=f'*_{tile_db.name}_*',
+                     date=date,
+                     platformname='Sentinel-2',
+                     processingLevel=f'Level-{level}',
+                     cloudcoverpercentage=(0, 0.4))
+
+            if len(products) == 0:
+                logger.info(f'No match found for: {tile_db.name}')
+                continue
+
+            uuid = uuid_with_larger_size(products)
+
+            begin_acquisition_date = products.get(uuid)['beginposition'].date()
+            tile_db.date = begin_acquisition_date.strftime('%Y-%m-%d')
+            tile_db.level = products.get(uuid)['processinglevel'].split('-')[1]
+            tile_db.cc = round(products.get(uuid)['cloudcoverpercentage'], 4)
+            tile_db.size_mb = size_in_mb(products.get(uuid)['size'])
+            tile_db.uuid = products.get(uuid)['uuid']
+            tile_db.geometry = products.get(tile_db.uuid)['footprint']
+            tile_db.fname = products.get(tile_db.uuid)['filename']
+            tile_db.update_tile()
+            logger.info(f'Tile: {tile_db.name} updated')
+    else:
+        logger.info(f'No incomplete tiles found for batch: {tile_loc}')
+    return 0
+
+
+def download_for_batch(api, tile_loc, basedir, status=None):
     """
     Download tiles of batch tile_loc and update database
     """
-    to_download = Tile.get_downloadable(tile_loc)
+    if not status:
+        to_download = Tile.get_downloadable(tile_loc)
+    elif status == 'corrupted':
+        to_download = Tile.get_downloadable_with_status(tile_loc, 'corrupted')
+
     if to_download:
         logger.info(f'Found: {len(to_download)} tiles to download')
         location_db = Location.load_by_loc(tile_loc)
@@ -65,10 +131,60 @@ def download_for_batch(api, tile_loc, basedir):
 
             os.remove(fzippath)
             tile_db.update_tile_availability(True)
-            tile_db.update_tile_status('ready')
-            logger.info(f'update {tile_db.name} as available and ready')
+            if tile_db.level == '2A':
+                tile_db.update_tile_status('ready')
+                logger.info(f'update {tile_db.name} as available and ready')
+            elif tile_db.level == '1C':
+                tile_db.update_tile_status('downloaded')
+                logger.info(f'update {tile_db.name} as available and downloaded')
         return 1
-    logger.info(f'No tiles found to be downloaded for batch: {tile_loc}')
+    else:
+        logger.info(f'No tiles found to be downloaded for batch: {tile_loc}')
+    return 0
+
+def correct_1c_to_2a_for_batch(tile_loc, basedir):
+    # gather tiles with status downloaded
+    tiles_1c = Tile.get_tiles_id_with_status(tile_loc, 'downloaded')
+    if tiles_1c:
+        logger.info(f'Found: {len(tiles_1c)} tiles 1C to correct')
+
+        # this works only when run on the dcorr server
+        my_env = os.environ.copy()
+        my_env['PATH'] = '/home/ubuntu/Sen2Cor-02.08.00-Linux64/bin:' + my_env['PATH']
+        my_env['SEN2COR_HOME'] = '/home/ubuntu/sen2cor/2.8'
+        my_env['SEN2COR_BIN'] = '/home/ubuntu/Sen2Cor-02.08.00-Linux64/lib/python2.7/site-packages/sen2cor'
+        my_env['LC_NUMERIC'] = 'C'
+        my_env['GDAL_DATA'] = '/home/ubuntu/Sen2Cor-02.08.00-Linux64/share/gdal'
+        my_env['GDAL_DRIVER_PATH']= 'disable'
+
+        location_db = Location.load_by_loc(tile_loc)
+        for _id in tiles_1c:
+            # load a tile from id
+            tile_db = Tile.load_by_tile_id(_id)
+            logger.info(f'Start correction for tile {tile_db.name}')
+            # get the full path to tile
+            full_basedir = os.path.join([bsedir, location_db.dirpath])
+            fpath = os.path.join([full_basedir, tile_db.fname])
+
+            cmd = f'L2A_Process {fpath}',
+
+            try:
+                result = subprocess.check_output(cmd, env=my_env, shell=True)
+            except subprocess.CalledProcessError as e:
+                logger.error(e.output)
+                continue
+
+            logger.info(f'Finished correction for tile {tile_db.name}')
+            tile_db.level = '1C, 2A'
+
+            new_fname = [_dir for _dir in os.listdir(path) if
+                fnmatch.fnmatch(_dir, f'*_MSIL2A_*_{tile_db.name}_*'][0]
+
+            tile_db.fname = new_fname
+            tile_db.update_tile()
+            logger.info(f'Updated db for tile {tile_db.name}')
+    else:
+        logger.info(f'No tiles found to be corrected for batch: {tile_loc}')
     return 0
 
 
