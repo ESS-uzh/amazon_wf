@@ -43,9 +43,10 @@ class Tile:
     def update_tile(self):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set acquisition_date=%s, level=%s, 
-            cloud_coverage=%s, size_mb=%s, uuid=%s, filename=%s, footprint=%s WHERE name=%s;''',
+            cloud_coverage=%s, size_mb=%s, uuid=%s, filename=%s, footprint=%s, status=%s 
+            WHERE name=%s;''',
             (self.date,  self.level, self.cc, self.size_mb, self.uuid, self.fname,
-                self.geometry, self.name))
+                self.geometry, self.status, self.name))
 
 
     def update_tile_loc(self, loc):
