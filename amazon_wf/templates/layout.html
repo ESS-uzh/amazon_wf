@@ -8,12 +8,13 @@
   </head>
 
   <body>
-  <header class="navbar">
-    <h1> Amazon Biodiversity DB </h1>
+  <div class="navbar">
+    <div class="title">
+        <p> Amazon Biodiversity DB </p>
+    </div>
     <div class="dropdown">
-      <button class="dropbtn">Users
-        <i class="fa fa-caret-down"></i>
-      </button>
+     <button class="dropbtn">Users
+     </button>
       <div class="dropdown-content">
           {% for usr in users %}
           <a href="{{ url_for('update', user_name=usr) }}">{{ usr }}</a>
@@ -22,7 +23,6 @@
     </div>
     <div class="dropdown">
       <button class="dropbtn">Availables
-        <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-content">
           {% for item in batches %}
@@ -32,7 +32,6 @@
     </div>
     <div class="dropdown">
       <button class="dropbtn">Results
-        <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-content">
           {% for item in batches %}
@@ -40,8 +39,8 @@
           {% endfor %}
        </div>
     </div>
-   </header>
-      <main class="main">
+   </div>
+      <div class="main_div">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
@@ -54,8 +53,6 @@
       {% block content %}{% endblock %}
       </div>
 
-      </main>
-      </main>
   </body>
 
 </html>

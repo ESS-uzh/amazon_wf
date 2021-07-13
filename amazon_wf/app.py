@@ -27,7 +27,7 @@ BATCHES = [i for i in range(1, 18)]
 def display_results(batch):
     with CursorFromConnectionPool() as cursor:
         cursor.execute('''SELECT tiles.id, tiles.name, tiles.level,
-                tiles.acquisition_date, tiles.size_mb, tiles.status,
+                tiles.acquisition_date, tiles.cloud_coverage, tiles.status,
                 tiles.available, biodivmap.proc_status, users.name
                 FROM tiles
                 FULL JOIN biodivmap
@@ -70,23 +70,36 @@ def display_update(user_id):
         data = cursor.fetchall()
         return data
 
+def display_discard(user_id):
+    with CursorFromConnectionPool() as cursor:
+        cursor.execute('''SELECT tiles.id, tiles.name,
+                biodivmap.proc_status, users.name
+                FROM tiles
+                LEFT JOIN biodivmap
+                ON tiles.id = biodivmap.tile_id
+                LEFT JOIN users
+                ON tiles.user_id = users.id
+                WHERE (biodivmap.proc_status='pca' or
+                biodivmap.proc_status='pca_ready') and
+                tiles.user_id=%s;''', (user_id,))
+        data = cursor.fetchall()
+        return data
 
 @app.route('/results/<batch>', methods=['GET'])
 def results(batch):
-    dirpath = Location.get_dirpath_from_loc(batch)
+    dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_results(batch)
-    print(batch)
     return render_template('result.html',
                            batch=batch,
                            data=data,
-                           dirpath=dirpath,
+                           dirpath_tiles=dirpath_tiles,
                            batches=BATCHES,
                            users=USERS)
 
 
 @app.route('/availables/<batch>', methods=['GET', 'POST'])
 def availables(batch):
-    dirpath = Location.get_dirpath_from_loc(batch)
+    dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_availables(batch, proc_status='pca')
     print(batch)
     if request.method == 'POST':
@@ -112,7 +125,7 @@ def availables(batch):
     return render_template('available.html',
                         batch=batch,
                         data=data,
-                        dirpath=dirpath,
+                        dirpath_tiles=dirpath_tiles,
                         batches=BATCHES,
                         users=USERS)
 
@@ -126,22 +139,28 @@ def update(user_name):
             flash('Please select a tile!', 'danger')
             return redirect(url_for('update', user_name=user_name))
         tile_db = Tile.load_by_tile_name(tile_name)
+        tile_id = tile_db.get_tile_id()
+        bio_db = Biodivmap.load_by_tile_id(tile_id)
         batch=tile_db.tile_loc
         if request.form.get('action') == 'update':
-            tile_id = tile_db.get_tile_id()
-            bio_db = Biodivmap(tile_id)
             bio_db.update_proc_status('pca_ready')
             flash('Tile {} proc_level updated!'.format(tile_name), 'success')
         elif request.form.get('action') == 'discard':
             print('discard')
-            print(batch)
-            tile_db.update_tile_user_id_as_null()
+            if bio_db.proc_status == 'pca':
+                tile_db.update_tile_user_id_as_null()
+            elif bio_db.proc_status == 'pca_ready':
+                bio_db.update_proc_status('pca')
             flash('Tile: {} discarded!'.format(tile_name), 'success')
         return redirect(url_for('results', batch=batch))
-    data = display_update(user._id)
+    data_to_update = display_update(user._id)
+    print(data_to_update)
+    data_to_discard = display_discard(user._id)
+    print(data_to_discard)
     return render_template('update.html',
                            user_name=user_name,
-                           data=data,
+                           data_update=data_to_update,
+                           data_discard=data_to_discard,
                            batches=BATCHES,
                            users=USERS)
 

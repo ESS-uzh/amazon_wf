@@ -1,20 +1,17 @@
 {% extends "layout.html" %}
 {% block content %}
-<section>
-    <h2> Batch: {{ batch }}</h2>
-    <h2> Locations: </h2>
-    <ul>
-        <li> Tiles:  {{ dirpath }} </li>
-    </ul>
-</section>
+<div class="content_section_one">
+    <p> Batch: <strong><em> {{ batch }} </em></strong> <p>
+    <p> Tiles location: <strong><em> {{ dirpath_tiles }} </em></strong> <p>
+</div>
 
-<section>
-    <h2> Availables: </h2>
+<div class="content_section_two">
     <form action="{{ url_for('availables',  batch=batch) }}" method="POST">
         <div class="select__tiles">
+        <p> Tiles with: <em><strong> PCA processing level </em></strong> </p>
         <select name="tile" place multiple>
         <option value="" disabled selected>Choose one or more tiles</option>
-        {% for row in data %}    
+        {% for row in data %}
         <option value="{{row[1]}}">{{row[1]}}</option>
         {% endfor %}
         </select>
@@ -26,9 +23,8 @@
         <option value="{{each}}">{{each}}</option>
         {% endfor %}
         </select>
-        </div>
         <button class="availables__btn" type="submit">submit</button>
+        </div>
     </form>
-</section>
-
+</div>
 {% endblock  content %}

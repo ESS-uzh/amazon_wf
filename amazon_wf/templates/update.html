@@ -1,23 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-<section>
-    <h2> User: {{ user_name }}</h2>
-</section>
 
-<section>
-    <h2> To update: </h2>
+<div class="content_section_one">
+  <p> User: <em><strong>{{ user_name }}</em></strong><p>
+</div>
+
+<div class="content_section_two">
+    <div class="update__pca">
     <form action="{{ url_for('update', user_name=user_name) }}" method="POST">
         <div class="select__tiles">
+    <p> update: <em><strong> pca->pca_ready </em></strong> </p>
         <select name="tile" place>
         <option value="" disabled selected>Choose a tile</option>
-        {% for row in data %}    
+        {% for row in data_update %}    
+        <option value="{{row[1]}}">{{row[1]}}</option>
+        {% endfor %}
+        </select>
+        </div>
+        <button class="update__btn" type="submit" name="action" value="update">update</button>
+    </form>
+    </div>
+    <div class="discard__pca_ready">
+    <form action="{{ url_for('update', user_name=user_name) }}" method="POST">
+        <div class="select__tiles">
+    <p> discard: <em><strong> pca->none</em></strong></em> // <strong> pca_ready->pca</em></strong> </p>
+        <select name="tile" place>
+        <option value="" disabled selected>Choose a tile </option>
+        {% for row in data_discard %}    
         <option value="{{row[1]}}">{{row[1]}}</option>
         {% endfor %}
         </select>
         </div>
         <button class="discard__btn" type="submit" name="action" value="discard">discard</button>
-        <button class="update__btn" type="submit" name="action" value="update">update</button>
     </form>
-</section>
+    </div>
+</div>
 
 {% endblock  content %}
