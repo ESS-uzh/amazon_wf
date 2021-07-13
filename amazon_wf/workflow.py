@@ -61,9 +61,9 @@ def stack():
     stack_for_batch(BATCH, BASEDIR)
 
 
-def pca():
+def pca(**kwargs):
     logger.info('Starting PCA procedure..')
-    biodivmap_pca_for_batch(BATCH, BASEDIR)
+    biodivmap_pca_for_batch(**kwargs)
 
 if __name__ == "__main__":
 
@@ -73,13 +73,13 @@ if __name__ == "__main__":
     Database.initialise(user=db['user'], password=db['pwd'], 
                         database=db['database'], host=db['host'])
 
-    BASEDIR = '/home/diego/files/shared/group'
+    BASEDIR = '/home/ubuntu/mnt/shared/group'
     BATCH = 1
 
     logger.info(f'Starting workflow for batch: {BATCH}')
     #update_db(tile_loc=BATCH, level='1C')#, date=('20200220', '20201020'))
     #download(tile_loc=BATCH, basedir=BASEDIR, status='corrupted')
-    correction(tile_loc=BATCH, basedir=BASEDIR)
-    #stack()
-    #pca()
+    #correction(tile_loc=BATCH, basedir=BASEDIR)
+    stack()
+    pca(tile_loc=BATCH, basedir=BASEDIR, proc_status='error pca')
 
