@@ -163,8 +163,8 @@ def correct_1c_to_2a_for_batch(tile_loc, basedir):
             tile_db = Tile.load_by_tile_id(_id)
             logger.info(f'Start correction for tile {tile_db.name}')
             # get the full path to tile
-            full_basedir = os.path.join([bsedir, location_db.dirpath])
-            fpath = os.path.join([full_basedir, tile_db.fname])
+            full_basedir = os.path.join(basedir, location_db.dirpath)
+            fpath = os.path.join(full_basedir, tile_db.fname)
 
             cmd = f'L2A_Process {fpath}',
 
@@ -177,10 +177,11 @@ def correct_1c_to_2a_for_batch(tile_loc, basedir):
             logger.info(f'Finished correction for tile {tile_db.name}')
             tile_db.level = '1C, 2A'
 
-            new_fname = [_dir for _dir in os.listdir(path) if
-                fnmatch.fnmatch(_dir, f'*_MSIL2A_*_{tile_db.name}_*'][0]
+            new_fname = [_dir for _dir in os.listdir(full_basedir) if
+                fnmatch.fnmatch(_dir, f'*_MSIL2A_*_{tile_db.name}_*')][0]
 
             tile_db.fname = new_fname
+            tile_db.status = 'ready'
             tile_db.update_tile()
             logger.info(f'Updated db for tile {tile_db.name}')
     else:
@@ -252,11 +253,11 @@ def stack_for_batch(tile_loc, basedir,
 
 
 
-def biodivmap_pca_for_batch(tile_loc, basedir,
+def biodivmap_pca_for_batch(tile_loc, basedir, proc_status='raster',
     dirpath = 'ess_biodiversity/data/processed_data/amazon/biodivmap'):
 
     tiles_id_ready = Tile.get_tiles_id_with_status(tile_loc, 'ready')
-    procs_and_tiles_id_raster = Biodivmap.get_procs_and_tiles_id_with_proc_status(tiles_id_ready, 'raster')
+    procs_and_tiles_id_raster = Biodivmap.get_procs_and_tiles_id_with_proc_status(tiles_id_ready, proc_status)
 
     if procs_and_tiles_id_raster:
         dirpath = os.path.join(dirpath, f'batch{tile_loc:03}')
@@ -300,7 +301,7 @@ def biodivmap_pca_for_batch(tile_loc, basedir,
             except subprocess.CalledProcessError as e:
                 logger.error(e.output)
                 os.remove(rscript_path)
-                biodivmap_db.update_proc_status('error pca')
+                biodivmap_db.update_proc_status('pca_error')
                 continue
             # delete the rscript_path
             os.remove(rscript_path)
