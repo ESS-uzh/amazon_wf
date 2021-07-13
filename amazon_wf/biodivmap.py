@@ -28,6 +28,15 @@ class Biodivmap:
             cursor.execute('''UPDATE biodivmap SET out_loc=%s 
             where tile_id=%s;''',(loc, self.tile_id))
 
+    @classmethod
+    def load_by_tile_id(cls, tile_id):
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('SELECT * FROM biodivmap where tile_id=%s;', (tile_id,))
+            biodivmap_data = cursor.fetchone()
+            return cls(tile_id=biodivmap_data[1],
+                       raster_loc=biodivmap_data[2],
+                       out_loc=biodivmap_data[3],
+                       proc_status=biodivmap_data[4])
 
     @classmethod
     def load_by_proc_id(cls, proc_id):
@@ -59,10 +68,10 @@ class Biodivmap:
         status:
          - raster
          - pca
-         - error_pca
+         - pca_error
          - pca_ready
          - out
-         - error_out
+         - out_error
 
         """
         with CursorFromConnectionPool() as cursor:
