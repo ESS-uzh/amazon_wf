@@ -114,7 +114,7 @@ def availables(batch):
                 tile_db = Tile.load_by_tile_name(tile_name)
                 if tile_db.user_id:
                     flash('Tiles already taken! Please try again.', 'danger')
-                    return url_for('availables', batch=batch)
+                    return redirect(url_for('availables', batch=batch))
                 else:
                     tile_db.update_tile_user_id(user_db._id)
             flash('Tiles selected for batch {}'.format(batch), 'success')
