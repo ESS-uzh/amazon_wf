@@ -2,8 +2,8 @@ import json
 
 from flask import request
 from flask import Flask, render_template, flash, redirect, url_for
+from amazon_wf import app
 
-from amazon_wf.database import Database
 from amazon_wf.tile import Tile
 from amazon_wf.location import Location
 from amazon_wf.biodivmap import Biodivmap
@@ -11,15 +11,6 @@ from amazon_wf.user import User
 from amazon_wf.database import CursorFromConnectionPool
 
 import pdb
-
-app = Flask(__name__)
-
-
-with open('../../db_amazon_credentials.json', "r") as read_file:
-    db = json.load(read_file)
-
-Database.initialise(user=db['user'], password=db['pwd'],
-                    database=db['database'], host=db['host'])
 
 USERS = User.get_users()
 BATCHES = [i for i in range(1, 18)]
@@ -84,6 +75,7 @@ def display_discard(user_id):
                 tiles.user_id=%s;''', (user_id,))
         data = cursor.fetchall()
         return data
+
 
 @app.route('/results/<batch>', methods=['GET'])
 def results(batch):
@@ -164,11 +156,3 @@ def update(user_name):
                            batches=BATCHES,
                            users=USERS)
 
-if __name__ == '__main__':
-    # Quick test configuration. Please use proper Flask configuration options
-    # in production settings, and use a separate file or environment variables
-    # to manage the secret key!
-    app.secret_key = 'mykey'
-    app.config['SECRET_KEY'] = 'mykey'
-
-    app.run(host='0.0.0.0', port=4995, debug=True)
