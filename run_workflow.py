@@ -12,12 +12,7 @@ from dateutil.relativedelta import relativedelta
 
 from sentinelsat import SentinelAPI
 
-from amazon_wf.actions import update_db_for_batch
-from amazon_wf.actions import download_for_batch
-from amazon_wf.actions import stack_for_batch
-from amazon_wf.actions import biodivmap_pca_for_batch
-from amazon_wf.actions import correct_1c_to_2a_for_batch
-from amazon_wf.database import Database
+from amazon_wf.actions import update_db_for_batch, download_for_batch, stack_for_batch, biodivmap_pca_for_batch, correct_1c_to_2a_for_batch
 
 import pdb
 
@@ -67,11 +62,6 @@ def pca(**kwargs):
 
 if __name__ == "__main__":
 
-    with open('../../db_amazon_credentials.json', "r") as read_file:
-        db = json.load(read_file)
-    
-    Database.initialise(user=db['user'], password=db['pwd'], 
-                        database=db['database'], host=db['host'])
 
     BASEDIR = '/home/ubuntu/mnt/shared/group'
     BATCH = 1
@@ -82,4 +72,3 @@ if __name__ == "__main__":
     #correction(tile_loc=BATCH, basedir=BASEDIR)
     stack()
     pca(tile_loc=BATCH, basedir=BASEDIR, proc_status='error pca')
-

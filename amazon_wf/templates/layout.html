@@ -13,12 +13,11 @@
         <p> Amazon Biodiversity DB </p>
     </div>
     <div class="dropdown">
-     <button class="dropbtn">Users
+     <button class="dropbtn">User
      </button>
       <div class="dropdown-content">
-          {% for usr in users %}
-          <a href="{{ url_for('update', user_name=usr) }}">{{ usr }}</a>
-          {% endfor %}
+          <a href="{{ url_for('update', user_name=user_name) }}">Update</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
       </div>
     </div>
     <div class="dropdown">
