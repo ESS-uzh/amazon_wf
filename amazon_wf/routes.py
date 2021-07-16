@@ -1,7 +1,8 @@
 import json
 
 from flask import request
-from flask import Flask, render_template, flash, redirect, url_for
+from flask import Flask, render_template, flash, redirect, url_for, session
+from werkzeug.security import check_password_hash, generate_password_hash
 from amazon_wf import app
 
 from amazon_wf.tile import Tile
@@ -77,13 +78,53 @@ def display_discard(user_id):
         return data
 
 
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user_name = request.form.get('user_name')
+        print(user_name)
+        user_password = request.form.get('user_password')
+        if user_name and user_password:
+            user_db = User.load_by_name(user_name)
+            print(user_db._id)
+            error= None
+            if not check_password_hash(user_db.pwd, user_password):
+                error = 'Incorrect password.'
+            if error is None:
+                session.clear()
+                session['user_id'] = user_db._id
+                flash(f'Welcome {user_name}!', 'success')
+                return redirect(url_for('results', batch=1))
+            flash(error, 'danger')
+        else:
+            flash('Please select a user and insert a password', 'danger')
+
+    return render_template('login.html',
+                           users=USERS)
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash(f'You have successfully logged out!', 'success')
+    return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    return render_template('register.html',
+                           users=USERS)
+
 @app.route('/results/<batch>', methods=['GET'])
 def results(batch):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    user_db = User.load_by_id(user_id)
     dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_results(batch)
     return render_template('result.html',
                            batch=batch,
                            data=data,
+                           user_name=user_db.name,
                            dirpath_tiles=dirpath_tiles,
                            batches=BATCHES,
                            users=USERS)
@@ -91,17 +132,17 @@ def results(batch):
 
 @app.route('/availables/<batch>', methods=['GET', 'POST'])
 def availables(batch):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    user_db = User.load_by_id(user_id)
     dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_availables(batch, proc_status='pca')
-    print(batch)
     if request.method == 'POST':
         print(batch)
-        user_name = request.form.get('user')
-        print(user_name)
         tiles_name = request.form.getlist('tile')
         print(tiles_name)
-        if user_name and tiles_name:
-            user_db = User.load_by_name(user_name)
+        if tiles_name:
             for tile_name in tiles_name:
                 tile_db = Tile.load_by_tile_name(tile_name)
                 if tile_db.user_id:
@@ -112,24 +153,27 @@ def availables(batch):
             flash('Tiles selected for batch {}'.format(batch), 'success')
             return redirect(url_for('results', batch=batch))
         else:
-            flash('Please select user and tile/s!', 'danger')
+            flash('Please select tile/s!', 'danger')
 
     return render_template('available.html',
                         batch=batch,
                         data=data,
+                        user_name=user_db.name,
                         dirpath_tiles=dirpath_tiles,
-                        batches=BATCHES,
-                        users=USERS)
+                        batches=BATCHES)
 
 
 @app.route('/update/<user_name>', methods=['GET', 'POST'])
 def update(user_name):
-    user = User.load_by_name(user_name)
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    user_db = User.load_by_id(user_id)
     if request.method == 'POST':
         tile_name = request.form.get('tile')
         if not tile_name:
             flash('Please select a tile!', 'danger')
-            return redirect(url_for('update', user_name=user_name))
+            return redirect(url_for('update', user_name=user_db.name))
         tile_db = Tile.load_by_tile_name(tile_name)
         tile_id = tile_db.get_tile_id()
         bio_db = Biodivmap.load_by_tile_id(tile_id)
@@ -145,12 +189,12 @@ def update(user_name):
                 bio_db.update_proc_status('pca')
             flash('Tile: {} discarded!'.format(tile_name), 'success')
         return redirect(url_for('results', batch=batch))
-    data_to_update = display_update(user._id)
+    data_to_update = display_update(user_db._id)
     print(data_to_update)
-    data_to_discard = display_discard(user._id)
+    data_to_discard = display_discard(user_db._id)
     print(data_to_discard)
     return render_template('update.html',
-                           user_name=user_name,
+                           user_name=user_db.name,
                            data_update=data_to_update,
                            data_discard=data_to_discard,
                            batches=BATCHES,

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content=width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="../static/style.css" />
+      <title>AmazonDB</title>
+  </head>
+
+<body>
+<div class="navbar">
+  <div class="title">
+    <p> Amazon Biodiversity DB </p>
+  </div>
+  <div class="navbar_right">
+      <a class="links" href="{{ url_for('login') }}">Login</a>
+      <a class="links" href="{{ url_for('register') }}">Reset Passwd</a>
+  </div>
+</div> 
+
+<div class="main_div">  
+  
+  <div class="content_section_one">
+    <form action="{{ url_for('login', users=users) }}" method="POST">
+      <div class="select__user">
+        <select name="user_name" place>
+        <option value="" disabled selected>Select a User</option>
+          {% for usr in users %}
+          <option value="{{ usr }}">{{ usr }}</a>
+          {% endfor %}
+        </select>
+      </div>
+    
+  </div>
+  
+  <div class="content_section_two">
+      <label>
+          Old Password:<br />
+        <input type="password" name="old_password">
+      </label><br />
+      <label>
+        New Password:<br />
+        <input type="password" name="new_password">
+      </label><br />
+      <label>
+        Retype Password:<br />
+        <input type="password" name="retype_new_password">
+      </label><br />
+      <button class="submit__btn" type="submit" name="action" value="update">submit</button>
+      </form>
+  </div>  
+
+</div>
+</body>
+</html>

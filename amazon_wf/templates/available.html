@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content_section_one">
+    <p> User: <strong><em> {{ user_name }} </em></strong> <p>
     <p> Batch: <strong><em> {{ batch }} </em></strong> <p>
     <p> Tiles location: <strong><em> {{ dirpath_tiles }} </em></strong> <p>
 </div>
@@ -16,13 +17,6 @@
         {% endfor %}
         </select>
         </div>
-        <div class="select__user">
-        <select name="user" place>
-        <option value="" disabled selected>Select a User</option>
-        {% for each in users %}
-        <option value="{{each}}">{{each}}</option>
-        {% endfor %}
-        </select>
         <button class="availables__btn" type="submit">submit</button>
         </div>
     </form>

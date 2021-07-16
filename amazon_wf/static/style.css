@@ -17,6 +17,20 @@
   text-decoration: none;
 }
 
+.navbar_right {
+  float: right;
+  padding: 16px 16px;
+  overflow: 5px;
+}
+
+.links {
+  color: white;
+  padding: 16px 16px;
+  text-decoration: none;
+  background-color: inherit;
+  font-family: inherit; /* Important for vertical align on mobile phones */
+}
+
 /* The dropdown container */
 .dropdown {
   float: right;
@@ -82,11 +96,11 @@
 .content_section_one{
   text-decoration: none;
   font-family: Arial;
-  margin: 10px 10px 50px 10px;
   font-size: 20px;
 }
 
 .content_section_two{
+  margin: 50px 0px 0px 0px;
   /*text-align: center;*/
   text-decoration: none;
   font-family: Arial;
@@ -108,6 +122,18 @@ select {
  padding: 10px 10px;
  margin: 10px 0;
  box-sizing: border-box;
+}
+
+.submit__btn{
+  background-color: #FF8C00; /* Oranged */
+  color: white;
+  margin: 50px 0px 0px 0px;
+  padding: 10px 10px 10px 10px;
+  text-align: right;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  /*float: right;*/
 }
 
 .availables__btn{

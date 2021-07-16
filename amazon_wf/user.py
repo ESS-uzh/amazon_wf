@@ -25,10 +25,12 @@ class User:
         Return user instance
         """
         with CursorFromConnectionPool() as cursor:
-            cursor.execute('''SELECT name FROM users WHERE id=%s;''',
+            cursor.execute('''SELECT * FROM users WHERE id=%s;''',
                     (_id,))
-            name = cursor.fetchone()
-            return cls(name=name[0])
+            data = cursor.fetchone()
+            return cls(_id=data[0], 
+                    name=data[1],
+                    pwd=data[2])
 
     @classmethod
     def load_by_name(cls, name):
@@ -39,7 +41,9 @@ class User:
             cursor.execute('''SELECT * FROM users WHERE name=%s;''',
                     (name,))
             data = cursor.fetchone()
-            return cls(name=data[1], _id=data[0])
+            return cls(_id=data[0], 
+                    name=data[1],
+                    pwd=data[2])
 
     @staticmethod
     def get_users():
