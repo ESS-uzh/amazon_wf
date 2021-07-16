@@ -1,4 +1,7 @@
 import json
+import geopandas as gpd
+import folium
+from shapely import wkb
 
 from flask import request
 from flask import Flask, render_template, flash, redirect, url_for, session
@@ -15,6 +18,17 @@ import pdb
 
 USERS = User.get_users()
 BATCHES = [i for i in range(1, 18)]
+
+
+def display_formap(batch):
+    with CursorFromConnectionPool() as cursor:
+        cursor.execute('''SELECT tiles.name,
+                tiles.acquisition_date, tiles.cloud_coverage, tiles.status,
+                tiles.available, tiles.footprint
+                FROM tiles WHERE tiles.tile_loc=%s;''', (batch,))
+        data = cursor.fetchall()
+        return data
+
 
 def display_results(batch):
     with CursorFromConnectionPool() as cursor:
@@ -113,6 +127,44 @@ def register():
     return render_template('register.html',
                            users=USERS)
 
+@app.route('/maps/<batch>', methods=['GET'])
+def maps(batch):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user_db = User.load_by_id(user_id)
+    dirpath_tiles = Location.get_dirpath_from_loc(batch)
+    data = display_formap(batch)
+    
+    df = gpd.GeoDataFrame(data, columns =['Name', 'Date', 'CloudC', 'Status', 'Available', 'Geometry'])
+    
+    m = folium.Map(location=[-3.46, -62.21], zoom_start=5, tiles='Stamen Terrain')
+    
+    for _, r in df.iterrows():
+    # Without simplifying the representation of each borough,
+    # the map might not be displayed
+        if not r['Geometry']:
+            print(r['Name'])
+        else:
+            sim_geo = gpd.GeoSeries(wkb.loads(bytes.fromhex(r['Geometry']))).simplify(tolerance=0.001)
+            geo_j = sim_geo.to_json()
+            geo_j = folium.GeoJson(data=geo_j,
+                               style_function=lambda x: {'fillColor': 'orange'})
+            strg = f"{r['Name']}, {r['Status']}"
+            folium.Popup(strg).add_to(geo_j)
+            geo_j.add_to(m)
+
+    return render_template('map.html',
+                           maps = m._repr_html_(),
+                           batch=batch,
+                           data=data,
+                           user_name=user_db.name,
+                           dirpath_tiles=dirpath_tiles,
+                           batches=BATCHES,
+                           users=USERS)
+
+    
 @app.route('/results/<batch>', methods=['GET'])
 def results(batch):
     user_id = session.get('user_id')

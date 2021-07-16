@@ -129,8 +129,6 @@ class Tile:
                        status=tile_data[11],
                        user_id=tile_data[12])
 
-
-
     @staticmethod
     def get_tiles():
         """

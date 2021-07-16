@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="content_section_one">
+<p> Batch: <strong><em>{{ batch }} </em></strong> <p>
+<p> Tiles location: <strong><em> {{ dirpath_tiles }} </em></strong><p>
+</div>
+
+<div class="content_section_two">
+    {{ maps | safe }}
+</div>
+{% endblock  content %}

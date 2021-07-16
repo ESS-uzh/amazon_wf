@@ -38,6 +38,15 @@
           {% endfor %}
        </div>
     </div>
+    <div class="dropdown">
+      <button class="dropbtn">Map
+      </button>
+      <div class="dropdown-content">
+          {% for item in batches %}
+          <a href="{{ url_for('maps', batch=item) }}">batch {{ item }}</a>
+          {% endfor %}
+       </div>
+    </div>
    </div>
       <div class="main_div">
       {% with messages = get_flashed_messages(with_categories=true) %}
