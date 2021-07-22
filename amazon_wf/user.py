@@ -19,6 +19,12 @@ class User:
             cursor.execute('''INSERT INTO users(name)
             VALUES (%s);''', (self.name,))
 
+    def update_user(self):
+        with CursorFromConnectionPool() as cursor:
+            cursor.execute('''UPDATE users set password=%s
+            WHERE name=%s;''',
+            (self.pwd,  self.name))
+
     @classmethod
     def load_by_id(cls, _id):
         """

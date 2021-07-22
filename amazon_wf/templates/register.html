@@ -19,9 +19,18 @@
 </div> 
 
 <div class="main_div">  
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="{{ category }}" >
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
   
   <div class="content_section_one">
-    <form action="{{ url_for('login', users=users) }}" method="POST">
+    <form action="{{ url_for('register') }}" method="POST">
       <div class="select__user">
         <select name="user_name" place>
         <option value="" disabled selected>Select a User</option>

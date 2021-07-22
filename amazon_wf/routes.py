@@ -124,6 +124,29 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'POST':
+        user_name = request.form.get('user_name')
+        old_pwd = request.form.get('old_password')
+        new_pwd = request.form.get('new_password')
+        retype_pwd = request.form.get('retype_new_password')
+        if all(v is not None for v in [user_name, old_pwd, new_pwd, retype_pwd]):
+            user_db = User.load_by_name(user_name)
+            print(user_db._id)
+            error= None
+            if not check_password_hash(user_db.pwd, old_pwd):
+                error = 'Incorrect old password!'
+            if not new_pwd == retype_pwd:
+                error = 'Passwords must match!'
+                print('no match')
+            if error is None:
+                pwd_hash = generate_password_hash(new_pwd)
+                user_db.pwd = pwd_hash
+                user_db.update_user()
+                flash(f'Password successfully updated for: {user_name}!', 'success')
+                return redirect(url_for('login'))
+            flash(error, 'danger')
+        else:
+            flash('Please fill in all fields', 'danger')
     return render_template('register.html',
                            users=USERS)
 
@@ -136,11 +159,11 @@ def maps(batch):
     user_db = User.load_by_id(user_id)
     dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_formap(batch)
-    
+
     df = gpd.GeoDataFrame(data, columns =['Name', 'Date', 'CloudC', 'Status', 'Available', 'Geometry'])
-    
+
     m = folium.Map(location=[-3.46, -62.21], zoom_start=5, tiles='Stamen Terrain')
-    
+
     for _, r in df.iterrows():
     # Without simplifying the representation of each borough,
     # the map might not be displayed
@@ -164,7 +187,7 @@ def maps(batch):
                            batches=BATCHES,
                            users=USERS)
 
-    
+
 @app.route('/results/<batch>', methods=['GET'])
 def results(batch):
     user_id = session.get('user_id')
