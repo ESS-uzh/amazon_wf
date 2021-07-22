@@ -146,7 +146,7 @@ def register():
                 return redirect(url_for('login'))
             flash(error, 'danger')
         else:
-            flash('Please fill in all fields', 'danger')
+            flash('Please select a user and fill in all fields', 'danger')
     return render_template('register.html',
                            users=USERS)
 
