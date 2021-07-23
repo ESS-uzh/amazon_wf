@@ -196,6 +196,8 @@ def results(batch):
     user_db = User.load_by_id(user_id)
     dirpath_tiles = Location.get_dirpath_from_loc(batch)
     data = display_results(batch)
+    # sanitize data by replacing None with an empty string
+    data = [(tuple(x if x else '' for x in _ )) for _ in data]
     return render_template('result.html',
                            batch=batch,
                            data=data,
