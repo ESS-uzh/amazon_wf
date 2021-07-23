@@ -1,6 +1,6 @@
 ## Welcome to amazon_wf: An app to collect and process sentinel2 tiles over the brazilian legal amazon border.
 
-### Note: This app is mean to be used by the members of the ESS group only.
+### Note: This app is meant to be used by the members of the ESS group only.
 
 ### Description:
 - The tiles are grouped in 17 batches of ~25 tiles each.
