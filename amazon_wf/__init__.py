@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from .database import Database
 import logging
@@ -12,6 +13,8 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 app = Flask(__name__)
+SECRET_KEY = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = SECRET_KEY
 
 with open('../db_amazon_credentials.json', "r") as read_file:
     db = json.load(read_file)
