@@ -252,7 +252,6 @@ def stack_for_batch(tile_loc, basedir,
     return 0
 
 
-
 def biodivmap_pca_for_batch(tile_loc, basedir, proc_status='raster',
     dirpath = 'ess_biodiversity/data/processed_data/amazon/biodivmap'):
 
@@ -261,7 +260,7 @@ def biodivmap_pca_for_batch(tile_loc, basedir, proc_status='raster',
 
     if procs_and_tiles_id_raster:
         dirpath = os.path.join(dirpath, f'batch{tile_loc:03}')
-        logger.info(f'Found: {len(procs_and_tiles_id_raster)} raster to process')
+        logger.info(f'Found: {len(procs_and_tiles_id_raster)} rasters to process')
         if not Location.get_loc_from_dirpath(dirpath):
             # create raster_loc
             location_db = Location(dirpath)
@@ -307,4 +306,57 @@ def biodivmap_pca_for_batch(tile_loc, basedir, proc_status='raster',
             os.remove(rscript_path)
             biodivmap_db.update_proc_status('pca')
     logger.info(f'No tiles found to be used for pca for batch: {tile_loc}')
+    return 0
+
+def biodivmap_out_for_batch(tile_loc, basedir, proc_status='pca_ready',
+    dirpath = 'ess_biodiversity/data/processed_data/amazon/biodivmap'):
+
+    tiles_id_pca_ready = Tile.get_tiles_id_with_status(tile_loc, 'ready')
+    procs_and_tiles_id_raster = Biodivmap.get_procs_and_tiles_id_with_proc_status(tiles_id_pca_ready, proc_status)
+    pdb.set_trace()
+
+    if procs_and_tiles_id_raster:
+        dirpath = os.path.join(dirpath, f'batch{tile_loc:03}')
+        logger.info(f'Found: {len(procs_and_tiles_id_raster)} rasters to process')
+
+        # Location must exist
+        loc = Location.get_loc_from_dirpath(dirpath)[0]
+        logger.info(f'Location: {loc}')
+
+        biodivmap_db = Biodivmap.load_by_proc_id(procs_and_tiles_id_raster[0][0])
+        indir = Location.get_dirpath_from_loc(biodivmap_db.raster_loc)
+        indir = os.path.join(basedir, indir)
+        outdir = os.path.join(basedir, dirpath)
+        outdir = pathlib.Path(outdir)
+        if not outdir.is_dir():
+            outdir.mkdir(parents=True, exist_ok=True)
+        logger.info(f'Location: {outdir}')
+
+        template_pca = os.path.join(os.path.dirname(outdir), 'amazon_template_out.R')
+
+        for proc_id, tile_id in procs_and_tiles_id_raster:
+            logger.info(f'Biodivmap processing processing for tile: {tile_id}')
+            mapping = {}
+            biodivmap_db = Biodivmap.load_by_proc_id(proc_id)
+            if not biodivmap_db.out_loc:
+                biodivmap_db.update_out_loc(loc)
+                logger.info(f'Update out_loc location to {loc}')
+            tile_db = Tile.load_by_tile_id(tile_id)
+            fname_raster = '_'.join([tile_db.name, tile_db.date.strftime('%Y%m%d')])+'.tif'
+            fname_rscript = fname_raster.replace('.tif', '.R')
+            mapping['path_to_raster'] = os.path.join(indir, fname_raster)
+            mapping['path_to_out'] = outdir
+            rscript_path = gen_R_script(template_pca, mapping, fname_rscript)
+            logger.info(f'Generated R script for tile: {tile_id}')
+            try:
+                result = subprocess.check_output(["Rscript", rscript_path])
+            except subprocess.CalledProcessError as e:
+                logger.error(e.output)
+                os.remove(rscript_path)
+                biodivmap_db.update_proc_status('out_error')
+                continue
+            # delete the rscript_path
+            os.remove(rscript_path)
+            biodivmap_db.update_proc_status('out')
+    logger.info(f'No tiles found to be used for biodivmap for batch: {tile_loc}')
     return 0
