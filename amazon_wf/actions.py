@@ -48,7 +48,7 @@ def uuid_with_larger_size(products):
     return uuid
 
 
-def update_db_for_batch(api, tile_loc, level='2A', date=('20200620', '20200820')):
+def update_db_for_batch(api, tile_loc, level='2A', date=('20200620', '20200820'), cc=(0, 1)):
     logger.info(f'Populate db for batch: {tile_loc}')
     logger.info(f'Level selected: {level}')
     logger.info(f'Date selected: {date}')
@@ -64,7 +64,7 @@ def update_db_for_batch(api, tile_loc, level='2A', date=('20200620', '20200820')
                      date=date,
                      platformname='Sentinel-2',
                      processingLevel=f'Level-{level}',
-                     cloudcoverpercentage=(0, 0.4))
+                     cloudcoverpercentage=cc)
 
             if len(products) == 0:
                 logger.info(f'No match found for: {tile_db.name}')
@@ -313,7 +313,6 @@ def biodivmap_out_for_batch(tile_loc, basedir, proc_status='pca_ready',
 
     tiles_id_pca_ready = Tile.get_tiles_id_with_status(tile_loc, 'ready')
     procs_and_tiles_id_raster = Biodivmap.get_procs_and_tiles_id_with_proc_status(tiles_id_pca_ready, proc_status)
-    pdb.set_trace()
 
     if procs_and_tiles_id_raster:
         dirpath = os.path.join(dirpath, f'batch{tile_loc:03}')
@@ -324,29 +323,26 @@ def biodivmap_out_for_batch(tile_loc, basedir, proc_status='pca_ready',
         logger.info(f'Location: {loc}')
 
         biodivmap_db = Biodivmap.load_by_proc_id(procs_and_tiles_id_raster[0][0])
-        indir = Location.get_dirpath_from_loc(biodivmap_db.raster_loc)
-        indir = os.path.join(basedir, indir)
-        outdir = os.path.join(basedir, dirpath)
-        outdir = pathlib.Path(outdir)
-        if not outdir.is_dir():
-            outdir.mkdir(parents=True, exist_ok=True)
-        logger.info(f'Location: {outdir}')
+        stack_dir = Location.get_dirpath_from_loc(biodivmap_db.raster_loc)
+        stack_dir = os.path.join(basedir, stack_dir)
+        biov_dir = os.path.join(basedir, dirpath)
+        #outdir = pathlib.Path(outdir)
 
-        template_pca = os.path.join(os.path.dirname(outdir), 'amazon_template_out.R')
+        template_out = os.path.join(os.path.dirname(biov_dir), 'amazon_template_out.R')
 
         for proc_id, tile_id in procs_and_tiles_id_raster:
             logger.info(f'Biodivmap processing processing for tile: {tile_id}')
             mapping = {}
             biodivmap_db = Biodivmap.load_by_proc_id(proc_id)
-            if not biodivmap_db.out_loc:
-                biodivmap_db.update_out_loc(loc)
-                logger.info(f'Update out_loc location to {loc}')
             tile_db = Tile.load_by_tile_id(tile_id)
             fname_raster = '_'.join([tile_db.name, tile_db.date.strftime('%Y%m%d')])+'.tif'
             fname_rscript = fname_raster.replace('.tif', '.R')
-            mapping['path_to_raster'] = os.path.join(indir, fname_raster)
-            mapping['path_to_out'] = outdir
-            rscript_path = gen_R_script(template_pca, mapping, fname_rscript)
+            rname = fname_raster.replace('.tif', '')
+            mapping['stack_dir'] = stack_dir
+            mapping['stack_name'] = rname
+            # too be changed
+            mapping['output_dir'] = biov_dir
+            rscript_path = gen_R_script(template_out, mapping, fname_rscript)
             logger.info(f'Generated R script for tile: {tile_id}')
             try:
                 result = subprocess.check_output(["Rscript", rscript_path])
