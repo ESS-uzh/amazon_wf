@@ -19,6 +19,15 @@ import pdb
 USERS = User.get_users()
 BATCHES = [i for i in range(1, 18)]
 
+def display_formap_all():
+    with CursorFromConnectionPool() as cursor:
+        cursor.execute('''SELECT tiles.name,
+                tiles.acquisition_date, tiles.cloud_coverage, tiles.status,
+                tiles.available, tiles.footprint
+                FROM tiles WHERE tiles.footprint is not NULL;''')
+        data = cursor.fetchall()
+        return data
+
 
 def display_formap(batch):
     with CursorFromConnectionPool() as cursor:
@@ -157,8 +166,12 @@ def maps(batch):
         return redirect(url_for('login'))
 
     user_db = User.load_by_id(user_id)
-    dirpath_tiles = Location.get_dirpath_from_loc(batch)
-    data = display_formap(batch)
+    if batch == 'all':
+        data = display_formap_all()
+        dirpath_tiles = None
+    else:
+        data = display_formap(batch)
+        dirpath_tiles = Location.get_dirpath_from_loc(batch)
 
     df = gpd.GeoDataFrame(data, columns =['Name', 'Date', 'CloudC', 'Status', 'Available', 'Geometry'])
 
