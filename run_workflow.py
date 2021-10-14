@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 
 from sentinelsat import SentinelAPI
 
-from amazon_wf.actions import update_db_for_batch, download_for_batch, stack_for_batch, biodivmap_pca_for_batch, correct_1c_to_2a_for_batch
+from amazon_wf.actions import update_db_for_batch, download_for_batch, stack_for_batch, biodivmap_pca_for_batch, correct_1c_to_2a_for_batch, biodivmap_out_for_batch
 
 import pdb
 
@@ -60,6 +60,10 @@ def pca(**kwargs):
     logger.info('Starting PCA procedure..')
     biodivmap_pca_for_batch(**kwargs)
 
+def out(**kwargs):
+    logger.info('Starting Biodivmap procedure..')
+    biodivmap_out_for_batch(**kwargs)
+
 if __name__ == "__main__":
 
 
@@ -67,8 +71,9 @@ if __name__ == "__main__":
     BATCH = 1
 
     logger.info(f'Starting workflow for batch: {BATCH}')
-    #update_db(tile_loc=BATCH, level='1C')#, date=('20200220', '20201020'))
-    #download(tile_loc=BATCH, basedir=BASEDIR, status='corrupted')
-    #correction(tile_loc=BATCH, basedir=BASEDIR)
-    stack()
-    pca(tile_loc=BATCH, basedir=BASEDIR, proc_status='error pca')
+    update_db(tile_loc=BATCH)#, level='2A', date=('20200220', '20201020'), cc=(0, 7))
+    download(tile_loc=BATCH, basedir=BASEDIR)#, status='corrupted')
+    correction(tile_loc=BATCH, basedir=BASEDIR)
+    #stack()
+    #pca(tile_loc=BATCH, basedir=BASEDIR, proc_status='pca_error')
+    #out(tile_loc=BATCH, basedir=BASEDIR, proc_status='out_error')
