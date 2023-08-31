@@ -27,7 +27,7 @@ class Tile:
         """
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''SELECT id FROM tiles
-                              WHERE name=%s;''', (self.name,))
+                              WHERE uuid=%s;''', (self.uuid,))
             return cursor.fetchone()
 
     def save_to_db(self):
@@ -43,37 +43,37 @@ class Tile:
     def update_tile(self):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set acquisition_date=%s, level=%s, 
-            cloud_coverage=%s, size_mb=%s, uuid=%s, filename=%s, footprint=%s, status=%s 
-            WHERE name=%s;''',
-            (self.date,  self.level, self.cc, self.size_mb, self.uuid, self.fname,
-                self.geometry, self.status, self.name))
+            cloud_coverage=%s, size_mb=%s, available=%s, filename=%s, footprint=%s, status=%s 
+            WHERE uuid=%s;''',
+            (self.date,  self.level, self.cc, self.size_mb, self.available, self.fname,
+                self.geometry, self.status, self.uuid))
 
 
     def update_tile_loc(self, loc):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set tile_loc=%s
-            WHERE name=%s;''', (loc, self.name))
+            WHERE uuid=%s;''', (loc, self.uuid))
 
 
     def update_tile_availability(self, available):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set available=%s
-            WHERE name=%s;''', (available, self.name))
+            WHERE uuid=%s;''', (available, self.uuid))
 
     def update_tile_status(self, status):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set status=%s
-            WHERE name=%s;''', (status, self.name))
+            WHERE uuid=%s;''', (status, self.uuid))
 
     def update_tile_user_id(self, user_id):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set user_id=%s
-            WHERE name=%s;''', (user_id, self.name))
+            WHERE uuid=%s;''', (user_id, self.uuid))
 
     def update_tile_user_id_as_null(self):
         with CursorFromConnectionPool() as cursor:
             cursor.execute('''UPDATE tiles set user_id=NULL
-            WHERE name=%s;''', (self.name,))
+            WHERE uuid=%s;''', (self.uuid,))
 
     @classmethod
     def load_by_tile_name(cls, name):
