@@ -14,6 +14,9 @@ logger.addHandler(file_handler)
 
 app = Flask(__name__)
 SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    SECRET_KEY = 'rkgjngelkjrnelkejn'
+
 app.config['SECRET_KEY'] = SECRET_KEY
 
 with open('../db_amazon_credentials.json', "r") as read_file:
